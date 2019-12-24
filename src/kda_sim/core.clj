@@ -1,11 +1,15 @@
 (ns kda-sim.core
   (:use [clojure.java.shell])
-  (:require [cheshire.core :as json]))
+  (:require [kda-sim.aws :as aws]
+            [cheshire.core :as json]))
+
+
+
 
 (defn -main
   "kda sim main"
   []
-  (println "kda-sim main")
+  (aws/run-kinesis-consumer "ds-inventory-raw")
 
   (println "*** DONE ***")
   (shutdown-agents)
