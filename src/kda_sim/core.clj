@@ -1,6 +1,7 @@
 (ns kda-sim.core
   (:use [clojure.java.shell])
   (:require [kda-sim.aws :as aws]
+            [kda-sim.v :as v]
             [kda-sim.awslogs :as awslogs]
             [cheshire.core :as json]))
 
@@ -21,7 +22,10 @@
                 second-arg (second args)
                 log-group-name (or first-arg "/ds/kda")
                 log-stream-name (or second-arg "analytics")]
-            (awslogs/start-log log-group-name log-stream-name))
+            (awslogs/start-log! log-group-name log-stream-name))
+    "v" (let [first-arg (first args)
+              stream-name (or first-arg "ds-inventory-raw")]
+          (v/start-v! stream-name))
     "info" (do
              (awslogs/logs-describe-log-groups "/ds/kda")
              (awslogs/logs-describe-log-streams "/ds/kda")

@@ -30,6 +30,11 @@
    (let [r (:out (sh "aws" "kinesis" "put-record" "--stream-name" stream-name "--partition-key" key "--data" json-data))]
      (json/parse-string r true))))
 
+(defn kinesis-put-records
+  ([stream-name data]
+   (let [r (:out (sh "aws" "kinesis" "put-records" "--stream-name" stream-name "--data" data))]
+     (json/parse-string r true))))
+
 
 (defn kinesis-describe-stream [stream-name]
   (let [r (:out (sh "aws" "kinesis" "describe-stream" "--stream-name" stream-name))]
