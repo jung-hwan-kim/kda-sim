@@ -53,8 +53,8 @@
         token (:nextForwardToken r)]
     (print-log-events events)
     (reset! aws-logs-token token)
-    (print (to-human-readable-time (System/currentTimeMillis)))
-    (println @aws-logs-token)))
+    (log/info @aws-logs-token)))
+
 (def log-task (atom nil))
 
 (defn start-log[log-group-name log-stream-name]

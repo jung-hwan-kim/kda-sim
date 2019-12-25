@@ -7,16 +7,26 @@
         <Console name="ConsoleErr" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
+        <RollingFile name="RollingFile" fileName="logs/app.log"
+                     filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+        </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="kda-sim" level="trace" additivity="false">
-            <AppenderRef ref="ConsoleErr"/>
+        <Logger name="kda-sim" level="debug" additivity="false">
+            <AppenderRef ref="RollingFile"/>
         </Logger>
-        <Logger name="jungfly" level="trace" additivity="false">
-            <AppenderRef ref="ConsoleErr"/>
+        <Logger name="jungfly" level="debug" additivity="false">
+            <AppenderRef ref="RollingFile"/>
         </Logger>
         <Root level="warn" additivity="false">
-            <AppenderRef ref="ConsoleErr"/>
+            <AppenderRef ref="RollingFile"/>
         </Root>
     </Loggers>
 </Configuration>

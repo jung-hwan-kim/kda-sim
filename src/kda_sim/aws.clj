@@ -10,6 +10,7 @@
       (log/info "shard:" shardId)
       (log/info "key:" key)
       (log/info "seq:" seq)
+      (log/info "data:" data)
       (println data)
       )))
 
