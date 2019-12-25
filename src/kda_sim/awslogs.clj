@@ -2,6 +2,7 @@
   (:use [clojure.java.shell])
   (:require [clojure.tools.logging :as log]
             [tea-time.core :as tt]
+            [clojure.string :as str]
             [kda-sim.common :as common]
             [cheshire.core :as json]))
 
@@ -29,7 +30,7 @@
      (let [r (:out (sh "aws" "logs" "get-log-events" "--log-group-name" log-group-name "--log-stream-name" log-stream-name "--next-token" next-token))]
        (json/parse-string r true)))))
 
-(defn print-log-events[events]
+(defn print-raw-log-events[events]
   (loop [l events]
     (if (empty? l)
       "done"
@@ -41,13 +42,36 @@
         (println (:message event))
         (recur (rest l))))))
 
+(defn print-jungfly-filtered-log-events[list]
+  (loop [events list]
+    (if (empty? events)
+    "done"
+    (let [msg (json/parse-string (:message (first events)) true)
+            logger (:logger msg)
+            locationInfo (:locationInformation msg)
+            messageType (:messageType msg)]
+        (if (str/starts-with? logger "jungfly")
+          (do
+            (print messageType)
+            (print " ")
+            (println locationInfo)
+            (println (:message msg)))
+          (if (= messageType "ERROR")
+            (do
+              (print messageType)
+              (print " ")
+              (println locationInfo)
+              (println (:message msg)))))
+      (recur (rest events))))))
+
+
 (def aws-logs-token (atom nil))
 
 (defn show-last-logs[log-group-name log-stream-name]
   (let [r (logs-get-logs log-group-name log-stream-name @aws-logs-token)
         events (:events r)
         token (:nextForwardToken r)]
-    (print-log-events events)
+    (print-jungfly-filtered-log-events events)
     (reset! aws-logs-token token)
     (log/info @aws-logs-token)))
 

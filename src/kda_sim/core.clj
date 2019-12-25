@@ -20,8 +20,8 @@
                   (aws/run-kinesis-consumer (first args))))
     "log" (let [first-arg (first args)
                 second-arg (second args)
-                log-group-name (or first-arg "/ds/kda")
-                log-stream-name (or second-arg "analytics")]
+                log-group-name (or first-arg "/aws/kinesis-analytics/ds-kda")
+                log-stream-name (or second-arg "kinesis-analytics-log-stream")]
             (awslogs/start-log! log-group-name log-stream-name))
     "v" (let [first-arg (first args)
               stream-name (or first-arg "ds-inventory-raw")]
