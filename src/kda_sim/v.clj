@@ -64,7 +64,7 @@
 (defn start-v![stream-name]
   (reset! v {:yin {:id 0 :status 0} :yang {:id 1 :status -2}})
   (tt/start!)
-  (reset! v-task (tt/every! 10 0 (bound-fn [] (change-and-send-v! stream-name)))))
+  (reset! v-task (tt/every! 60 0 (bound-fn [] (change-and-send-v! stream-name)))))
 
 (defn stop-v![]
   (tt/cancel! @v-task)
