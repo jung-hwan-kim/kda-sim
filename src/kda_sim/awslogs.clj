@@ -55,7 +55,7 @@
 
 (defn start-log![log-group-name log-stream-name]
   (tt/start!)
-  (reset! log-task (tt/every! 10 0 (bound-fn [] (show-last-logs log-group-name log-stream-name))))
+  (reset! log-task (tt/every! 60 0 (bound-fn [] (show-last-logs log-group-name log-stream-name))))
   )
 
 (defn stop-log![]
