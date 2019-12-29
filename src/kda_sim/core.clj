@@ -24,7 +24,7 @@
                 log-stream-name (or second-arg "kinesis-analytics-log-stream")]
             (awslogs/start-log! log-group-name log-stream-name))
     "v" (let [first-arg (first args)
-              second-arg (second args)
+              second-arg (Integer/parseInt (second args))
               stream-name (or first-arg "ds-inventory-raw")]
           (v/start-v! stream-name (or second-arg 60)))
     "info" (do
