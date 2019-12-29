@@ -10,7 +10,7 @@
   (json/generate-string {:id id :status status :date (common/to-human-readable-time (System/currentTimeMillis))}))
 
 (def v-task (atom nil))
-(def v (atom nil))
+(def v (atom {:yin {:id 0 :status 0} :yang {:id 1 :status -2}}))
 
 (defn inc2 [x]
   (+ x 2))
@@ -34,11 +34,26 @@
           (> (get-in value [:yin :status]) 2) (rebirth true)
           (> (get-in value [:yang :status]) 2) (rebirth false)))
 
+(defn convert-status [status-int]
+  (case status-int
+    1 "add"
+    2 "update"
+    3 "remove"
+    "unknown"))
+(defn transform [raw]
+  (-> raw
+      (assoc :created (System/currentTimeMillis))
+      (update :id str)
+      ;(update :status convert-status)
+      (dissoc :status)
+      (assoc :eventType (convert-status (:status raw)))
+      ))
+
 (defn -to-kinesis-record [record]
-  (let [r (assoc record :created (common/to-human-readable-time (System/currentTimeMillis)))]
+  (let [r (transform record)]
     (-> {}
       (assoc :Data (json/generate-string r))
-      (assoc :PartitionKey (str (:id r))))))
+      (assoc :PartitionKey (:id r)))))
 
 (defn to-kinesis-records [v-state]
   (let [yin (:yin v-state) yang (:yang v-state)]
