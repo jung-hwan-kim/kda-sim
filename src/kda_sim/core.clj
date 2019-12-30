@@ -5,9 +5,16 @@
             [kda-sim.awslogs :as awslogs]
             [cheshire.core :as json]))
 
+(def default-kinesis "ds-prototype-raw")
+(defn send-rule [rule-name rule-value]
+  (let [stream-name default-kinesis
+        data {:type "rule ":id rule-name :value rule-value :op "update"
+              :created (System/currentTimeMillis)
+              :updated (System/currentTimeMillis)}]
+    (aws/kinesis-put stream-name [data])))
+
+
 (def help-doc "Options: kinesis, log")
-
-
 (defn -main
   [command & args]
   (case command

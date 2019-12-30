@@ -41,40 +41,30 @@
     3 "remove"
     "unknown"))
 (defn transform [raw]
-  (-> raw
-      (assoc :created (System/currentTimeMillis))
-      (update :id str)
-      ;(update :status convert-status)
-      (dissoc :status)
-      (assoc :eventType (convert-status (:status raw)))
-      ))
+  (let [op (convert-status (:status raw))]
+    (-> raw
+        (assoc :created (System/currentTimeMillis))
+        (update :id str)
+        (assoc :type "actor")
+        ;(update :status convert-status)
+        (dissoc :status)
+        (assoc :op op)
+        (assoc :eventType op))))
 
-(defn -to-kinesis-record [record]
-  (let [r (transform record)]
-    (-> {}
-      (assoc :Data (json/generate-string r))
-      (assoc :PartitionKey (:id r)))))
 
-(defn to-kinesis-records [v-state]
+(defn transform-to-kinesis-records [v-state]
   (let [yin (:yin v-state) yang (:yang v-state)]
     (cond-> []
-            (> (:status yin) 0) (conj (-to-kinesis-record yin))
-            (> (:status yang) 0) (conj (-to-kinesis-record yang))
+            (> (:status yin) 0) (conj (aws/transform-to-kinesis-record (transform yin)))
+            (> (:status yang) 0) (conj (aws/transform-to-kinesis-record (transform yang)))
             true (json/generate-string))))
 
-(defn kinesis-put-records
-  ([stream-name data]
-   (let [r (sh "aws" "kinesis" "put-records" "--stream-name" stream-name "--records" data)]
-     ;(println data)
-     (if (= (:exit r) 0)
-       (json/parse-string (:out r) true)
-       (do (println data)
-           r)))))
+
 
 (defn change-and-send-v! [stream-name]
   (swap! v change-v)
-  (log/info (kinesis-put-records stream-name (to-kinesis-records @v)))
-  (println @v))
+  (println @v)
+  (aws/kinesis-put-records stream-name (transform-to-kinesis-records @v)))
 
 (defn start-v![stream-name interval]
   (reset! v {:yin {:id 0 :status 0} :yang {:id 1 :status -2}})

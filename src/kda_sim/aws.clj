@@ -40,3 +40,31 @@
   (let [r (:out (sh "aws" "kinesis" "describe-stream" "--stream-name" stream-name))]
     (json/parse-string r true)))
 
+(defn transform-to-kinesis-record [r]
+    (-> {}
+        (assoc :Data (json/generate-string r))
+        (assoc :PartitionKey (:id r))))
+
+(defn transform-to-kinesis-records [vector]
+  (json/generate-string (vec (map transform-to-kinesis-record vector))))
+
+(defn kinesis-put-records
+  ([stream-name string-data]
+   (let [r (sh "aws" "kinesis" "put-records" "--stream-name" stream-name "--records" string-data)]
+     (println string-data)
+     (if (= (:exit r) 0)
+       (json/parse-string (:out r) true)
+       (do
+         (println string-data)
+         r)))))
+
+(defn kinesis-put
+  ([stream-name vector]
+   (let [data (transform-to-kinesis-records vector)
+         r (sh "aws" "kinesis" "put-records" "--stream-name" stream-name "--records" data)]
+     (println data)
+     (if (= (:exit r) 0)
+       (json/parse-string (:out r) true)
+       (do
+         (println data)
+         r)))))
