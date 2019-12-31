@@ -40,36 +40,36 @@
     2 "update"
     3 "remove"
     "unknown"))
-(defn transform [raw]
+(defn transform [type-name raw]
   (let [op (convert-status (:status raw))]
     (-> raw
         (assoc :created (System/currentTimeMillis))
         (update :id str)
-        (assoc :type "actor")
+        (assoc :type type-name)
         ;(update :status convert-status)
         (dissoc :status)
         (assoc :op op)
         (assoc :eventType op))))
 
 
-(defn transform-to-kinesis-records [v-state]
+(defn transform-to-kinesis-records [type-name v-state]
   (let [yin (:yin v-state) yang (:yang v-state)]
     (cond-> []
-            (> (:status yin) 0) (conj (aws/transform-to-kinesis-record (transform yin)))
-            (> (:status yang) 0) (conj (aws/transform-to-kinesis-record (transform yang)))
+            (> (:status yin) 0) (conj (aws/transform-to-kinesis-record (transform type-name yin)))
+            (> (:status yang) 0) (conj (aws/transform-to-kinesis-record (transform type-name yang)))
             true (json/generate-string))))
 
 
 
-(defn change-and-send-v! [stream-name]
+(defn change-and-send-v! [type-name stream-name]
   (swap! v change-v)
   (println @v)
-  (aws/kinesis-put-records stream-name (transform-to-kinesis-records @v)))
+  (aws/kinesis-put-records stream-name (transform-to-kinesis-records type-name @v)))
 
-(defn start-v![stream-name interval]
+(defn start-v![type-name stream-name interval]
   (reset! v {:yin {:id 0 :status 0} :yang {:id 1 :status -2}})
   (tt/start!)
-  (reset! v-task (tt/every! interval 0 (bound-fn [] (change-and-send-v! stream-name)))))
+  (reset! v-task (tt/every! interval 0 (bound-fn [] (change-and-send-v! type-name stream-name)))))
 
 (defn stop-v![]
   (tt/cancel! @v-task)

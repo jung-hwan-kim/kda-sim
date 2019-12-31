@@ -8,7 +8,7 @@
 (def default-kinesis "ds-prototype-raw")
 (defn send-rule [rule-name rule-value]
   (let [stream-name default-kinesis
-        data {:type "rule ":id rule-name :value rule-value :op "update"
+        data {:type "rule":id rule-name :value rule-value :op "update"
               :created (System/currentTimeMillis)
               :updated (System/currentTimeMillis)}]
     (aws/kinesis-put stream-name [data])))
@@ -31,9 +31,11 @@
                 log-stream-name (or second-arg "kinesis-analytics-log-stream")]
             (awslogs/start-log! log-group-name log-stream-name))
     "v" (let [first-arg (first args)
-              second-arg (Integer/parseInt (second args))
-              stream-name (or first-arg "ds-inventory-raw")]
-          (v/start-v! stream-name (or second-arg 60)))
+              second-arg (second args)
+              third-arg (Integer/parseInt (nth args 2))
+              type-name (or first-arg "actor")
+              stream-name (or second-arg "ds-inventory-raw")]
+          (v/start-v! type-name stream-name (or third-arg 60)))
     "info" (do
              (awslogs/logs-describe-log-groups "/ds/kda")
              (awslogs/logs-describe-log-streams "/ds/kda")
