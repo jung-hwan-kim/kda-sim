@@ -80,14 +80,18 @@ public class KinesisConsumer {
         schedulerThread.setDaemon(true);
         schedulerThread.start();
 
-        System.out.println("Press enter to shutdown");
+        System.out.println("Type 'x' and 'enter' to shutdown");
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         try {
-            reader.readLine();
+            String a = reader.readLine();
+            while(! "x".equals(a)) {
+                System.out.println(a);
+                a = reader.readLine();
+            }
         } catch (IOException ioex) {
-            log.error("Caught exception while waiting for confirm. Shutting down.", ioex);
+            System.out.println("Caught exception while waiting for confirm. Shutting down." + ioex);
         }
-
         log.info("Cancelling producer and shutting down executor.");
         //producerFuture.cancel(true);
         //producerExecutor.shutdownNow();
