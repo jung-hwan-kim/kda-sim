@@ -3,8 +3,7 @@
   (:require [kda-sim.aws :as aws]
             [kda-sim.v :as v]
             [kda-sim.awslogs :as awslogs]
-            [cheshire.core :as json])
-  (:import (jungfly.aws TestM)))
+            [cheshire.core :as json]))
 
 (def default-kinesis "ds-prototype-raw")
 (defn send-rule [stream-name rule-name rule-value]
@@ -40,7 +39,5 @@
              (awslogs/logs-describe-log-groups "/ds/kda")
              (awslogs/logs-describe-log-streams "/ds/kda")
              (shutdown-agents))
-    "t" (let [t (new TestM)]
-          (.run t))
     (println help-doc))
   (println "*** DONE ***"))
