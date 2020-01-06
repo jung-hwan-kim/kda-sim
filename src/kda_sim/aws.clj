@@ -40,10 +40,17 @@
   (let [r (:out (sh "aws" "kinesis" "describe-stream" "--stream-name" stream-name))]
     (json/parse-string r true)))
 
+(defn get-partitionkey[record]
+  (let [key (:VEHICLE_ID record)]
+    (if (nil? key)
+      "0"
+      key
+      )))
+
 (defn transform-to-kinesis-record [r]
     (-> {}
         (assoc :Data (json/generate-string r))
-        (assoc :PartitionKey (:id r))))
+        (assoc :PartitionKey (get-partitionkey r))))
 
 (defn transform-to-kinesis-records [vector]
   (json/generate-string (vec (map transform-to-kinesis-record vector))))

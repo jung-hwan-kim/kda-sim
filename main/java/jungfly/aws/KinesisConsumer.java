@@ -1,7 +1,5 @@
 package jungfly.aws;
 
-
-
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,9 +57,6 @@ public class KinesisConsumer {
     }
 
     public void run() {
-        //ScheduledExecutorService producerExecutor = Executors.newSingleThreadScheduledExecutor();
-        //ScheduledFuture<?> producerFuture = producerExecutor.scheduleAtFixedRate(this::publishRecord, 10, 1, TimeUnit.SECONDS);
-
         DynamoDbAsyncClient dynamoClient = DynamoDbAsyncClient.builder().region(region).build();
         CloudWatchAsyncClient cloudWatchClient = CloudWatchAsyncClient.builder().region(region).build();
         ConfigsBuilder configsBuilder = new ConfigsBuilder(streamName, streamName, kinesisClient, dynamoClient, cloudWatchClient, UUID.randomUUID().toString(), processorFactory);
@@ -86,15 +81,12 @@ public class KinesisConsumer {
         try {
             String a = reader.readLine();
             while(! "x".equals(a)) {
-                System.out.println(a);
                 a = reader.readLine();
             }
         } catch (IOException ioex) {
             System.out.println("Caught exception while waiting for confirm. Shutting down." + ioex);
         }
         log.info("Cancelling producer and shutting down executor.");
-        //producerFuture.cancel(true);
-        //producerExecutor.shutdownNow();
 
         Future<Boolean> gracefulShutdownFuture = scheduler.startGracefulShutdown();
         log.info("Waiting up to 20 seconds for shutdown to complete.");
