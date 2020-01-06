@@ -8,7 +8,8 @@
             [camel-snake-kebab.core :as csk]
             [taoensso.nippy :as nippy]
             [cheshire.core :as json])
-  (:import (jungfly.aws EventtimestampParser)))
+  (:import (jungfly.aws EventtimestampParser)
+           (java.util Base64)))
 
 (def kinesis-local "ds-prototype-raw")
 (def kinesis-remote "ds-inventory-raw")
@@ -18,6 +19,30 @@
 
 (defn decode-edn [base64-str]
   (nippy/thaw (.decode (Base64/getDecoder) base64-str)))
+
+(defn ednk-read-kstate [stream-name]
+  (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
+                                                               {:k kstate})})
+        event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
+    (aws/kinesis-put stream-name [event])
+    ))
+
+(defn ednk-clean-kstate [stream-name]
+  (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
+                                                               (.clean kstate-obj)
+                                                               {:k kstate})})
+        event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
+    (aws/kinesis-put stream-name [event])
+    ))
+(defn ednk-memory [stream-name]
+  (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
+                                                               {:freeMem  (.freeMemory (Runtime/getRuntime))
+                                                                :maxMem   (.maxMemory (Runtime/getRuntime))
+                                                                :totalMem  (.totalMemory (Runtime/getRuntime))
+                                                                })})
+        event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
+    (aws/kinesis-put stream-name [event])
+    ))
 
 (defn send-rule [stream-name rule-name rule-value]
   (let [data {:eventtable "rule" :id rule-name :value rule-value :op "update"
