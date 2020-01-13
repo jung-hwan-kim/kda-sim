@@ -76,10 +76,11 @@
   (let [event (-> (event/picture-update "0")
                   (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))
         ]
-    (aws/kinesis-put stream-name [event])
-    ))
+    (aws/kinesis-put stream-name [event])))
 
 
+(defn test-kinesis[stream-name]
+  (aws/kinesis-put stream-name [{:vehicleid "123" :test 1}]))
 
 (defn send-heartbeat-k[stream-name vehicleId debug action]
   (let [event {:EVENTTABLE "HEARTBEAT_K"
@@ -87,10 +88,8 @@
                :DEBUG debug
                :ACTION action
                :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)
-               }
-        ]
-    (aws/kinesis-put stream-name [event])
-    ))
+               }]
+    (aws/kinesis-put stream-name [event])))
 
 (def help-doc "Options: kinesis, log, v
 e.g.

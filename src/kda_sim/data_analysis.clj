@@ -9,45 +9,52 @@
             [cheshire.core :as json]))
 
 
-(defn create-event-table [conn]
-  (jdbc/execute! conn ["create table event (
-  id int auto_increment primary key,
-  vehicleId int,
-  eventDate varchar(32),
-  eventType varchar(32),
-  country int,
-  runNumber varchar(10),
-  lotNumber varchar(10),
-  lane varchar(10),
-  iteration int,
-  currentHighBid int,
-  buyNowPrice int,
-  auctionEndDate varchar(32),
-  vehicleGrade decimal(3,2)
-)"]))
+
 
 (defn -loadup[conn file]
   (println "loading.." (str file))
   (let [jsons (json/parsed-seq (clojure.java.io/reader file) true)
         val (map (fn[x] (select-keys x [:vehicleId
-                                      :eventType
-                                      :eventDate
-                                      :eventType
-                                      :country
-                                      :runNumber
-                                      :lotNumber
-                                      :lane
-                                      :iteration
-                                      :currentHighBid
-                                      :buyNowPrice
-                                      :auctionEndDate
-                                      :vehicleGrade])) jsons)
+                                        :eventType
+                                        :eventDate
+                                        :country
+                                        :runNumber
+                                        :lotNumber
+                                        :lane
+                                        :iteration
+                                        :currentHighBid
+                                        :buyNowPrice
+                                        :auctionEndDate
+                                        :vehicleGrade
+                                        :drivetrain
+                                        :sellerAnnouncements
+                                        :hasPriorPaintwork
+                                        :titleState
+                                        :fuelType
+                                        :vehicleDetailUrl
+                                        :mileage
+                                        :vehicleType
+                                        :bodyStyleName
+                                        :imageViewerUrl
+                                        :engineName
+                                        :sellerType
+                                        :inspectionDate
+                                        :primaryImageUrl
+                                        :saleEventDate
+                                        :salvage
+                                        :vin
+                                        :finalPrice
+                                        :inspectionComments
+                                        :basePrice
+                                        ])) jsons)
         i-sql (-> (insert-into :event)
                   (values val)
                   sql/format)
         result (jdbc/execute! conn i-sql)
       ]
     (println "finished: " result)))
+
+
 
 (defn loadup[conn]
   (let [dir (clojure.java.io/file "../../tmp/drivin-prod")
@@ -107,15 +114,12 @@
          (fn r)
          (recur (get-next-events conn vehicleid offset-eventdate batch-size) (inc c)))))))
 
-
+;(def db {:dbtype "h2" :dbname "prototype01"})
+;(def conn conn (next.jdbc/get-connection db))
 (defn batchload-event-data
-  ([stream-name batch-size]
-   (let[db {:dbtype "h2" :dbname "inventory"}
-        conn (jdbc/get-connection db)
-        fn (fn[r] (aws/kinesis-put stream-name r))]
+  ([conn stream-name batch-size]
+   (let[fn (fn[r] (aws/kinesis-put stream-name r))]
      (apply-batch-events conn fn batch-size)))
-  ([stream-name vehicleid batch-size]
-   (let[db {:dbtype "h2" :dbname "inventory"}
-        conn (jdbc/get-connection db)
-        fn (fn[r] (aws/kinesis-put stream-name r))]
+  ([conn stream-name vehicleid batch-size]
+   (let[fn (fn[r] (aws/kinesis-put stream-name r))]
      (apply-batch-events conn vehicleid fn batch-size))))
