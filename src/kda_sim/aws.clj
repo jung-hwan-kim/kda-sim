@@ -2,17 +2,27 @@
   (:use [clojure.java.shell])
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as json])
-  (:import (java.time LocalDate LocalDateTime ZoneOffset)))
+  (:import (java.time LocalDate LocalDateTime ZoneOffset)
+           (jungfly.aws KinesisProducer)))
+
+(def producer (new KinesisProducer))
+(def counter (atom 0))
 
 (defn default-kinesis-listener[]
   (reify jungfly.aws.KinesisListener
     (listen [this shardId key seq data]
-      (log/info "shard:" shardId)
-      (log/info "key:" key)
-      (log/info "seq:" seq)
-      (log/info "data:" data)
-      (println data)
-      )))
+      ;(log/info "shard:" shardId)
+      ;(log/info "key:" key)
+      ;(log/info "seq:" seq)
+      ;(log/info "data:" data)
+      (println (swap! counter inc) ">" data)
+      )
+    (resetCount [this]
+      (reset! counter 0)
+      (println "resetted to zero"))
+    (print [this]
+      (println "Count=" @counter))
+    ))
 
 (defn run-kinesis-consumer
   ([stream-name]
@@ -40,20 +50,20 @@
   (let [r (:out (sh "aws" "kinesis" "describe-stream" "--stream-name" stream-name))]
     (json/parse-string r true)))
 
-(defn get-partitionkey[record]
-  (let [key (:VEHICLE_ID record)]
+(defn get-partitionkey[pkey record]
+  (let [key (pkey record)]
     (if (nil? key)
       "0"
-      key
+      (str key)
       )))
 
-(defn transform-to-kinesis-record [r]
+(defn transform-to-kinesis-record [pkey r]
     (-> {}
         (assoc :Data (json/generate-string r))
-        (assoc :PartitionKey (get-partitionkey r))))
+        (assoc :PartitionKey (get-partitionkey pkey r))))
 
-(defn transform-to-kinesis-records [vector]
-  (json/generate-string (vec (map transform-to-kinesis-record vector))))
+(defn transform-to-kinesis-records [pkey vector]
+  (json/generate-string (vec (map #(transform-to-kinesis-record pkey %) vector))))
 
 (defn kinesis-put-records
   ([stream-name string-data]
@@ -65,9 +75,23 @@
          (println string-data)
          r)))))
 
+
+(defn transform-kineisis-data [vector pkey-fn]
+  (let [t-fn (fn[r] {:Data (json/generate-string r) :PartitionKey (pkey-fn r)})]
+    (map t-fn vector)
+    ))
+
 (defn kinesis-put
+  ([stream-name vector pkey-fn]
+  (let [data (vec (transform-kineisis-data vector pkey-fn))]
+    (println data)
+    (.putRecords producer stream-name data)))
   ([stream-name vector]
-   (let [data (transform-to-kinesis-records vector)
+   (kinesis-put stream-name vector #(:vehicleid %))))
+
+(defn -kinesis-put
+  ([stream-name pkey vector]
+   (let [data (transform-to-kinesis-records pkey vector)
          r (sh "aws" "kinesis" "put-records" "--stream-name" stream-name "--records" data)]
      (println data)
      (if (= (:exit r) 0)

@@ -37,6 +37,7 @@ public class KinesisConsumer {
     private final String streamName;
     private final Region region;
     private final KinesisAsyncClient kinesisClient;
+    private KinesisListener listener;
 
     private class ProcessorFactory implements ShardRecordProcessorFactory {
         private KinesisListener listener;
@@ -54,6 +55,7 @@ public class KinesisConsumer {
         this.region = Region.of(ObjectUtils.firstNonNull(region, "us-east-1"));
         this.kinesisClient = KinesisClientUtil.createKinesisAsyncClient(KinesisAsyncClient.builder().region(this.region));
         this.processorFactory = new ProcessorFactory(listener);
+        this.listener = listener;
     }
 
     public void run() {
@@ -82,6 +84,11 @@ public class KinesisConsumer {
             String a = reader.readLine();
             while(! "x".equals(a)) {
                 a = reader.readLine();
+                if ("r".equals(a)) {
+                    listener.resetCount();
+                } else {
+                    listener.print();
+                }
             }
         } catch (IOException ioex) {
             System.out.println("Caught exception while waiting for confirm. Shutting down." + ioex);

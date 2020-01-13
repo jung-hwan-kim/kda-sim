@@ -13,3 +13,5 @@ pom.xml.asc
 /.idea/
 /kda-sim.iml
 /logs/
+/inventory.mv.db
+/inventory.trace.db

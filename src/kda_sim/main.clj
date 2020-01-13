@@ -7,6 +7,7 @@
             [datascript.core :as d]
             [camel-snake-kebab.core :as csk]
             [taoensso.nippy :as nippy]
+            [kda-sim.data-analysis :as da]
             [cheshire.core :as json])
   (:import (jungfly.aws EventtimestampParser)
            (java.util Base64)))
@@ -77,6 +78,8 @@
         ]
     (aws/kinesis-put stream-name [event])
     ))
+
+
 
 (defn send-heartbeat-k[stream-name vehicleId debug action]
   (let [event {:EVENTTABLE "HEARTBEAT_K"
