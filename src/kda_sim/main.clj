@@ -90,7 +90,7 @@
       (if (empty? list)
         total-count
         (let [working-list (take batch-size list)]
-          (println (aws/kinesis-put stream-name (vec working-list) #(:vehicleId %)))
+          (aws/kinesis-put stream-name (vec working-list) #(:vehicleId %))
           ;(println (count working-list))
           (recur (drop batch-size list) (+ total-count (count working-list))))))))
 

@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -46,6 +47,12 @@ public class KinesisProducer {
                                                                 .streamName(streamName)
                                                                 .build();
         PutRecordsResponse response = kinesisClient.putRecords(putRecordsRequest);
+        if (response.failedRecordCount() > 0) {
+            System.out.println("FAILED: " + response.failedRecordCount());
+            for (PutRecordsResultEntry e : response.records()) {
+                System.out.println(e.errorCode() + ":" + e.errorMessage());
+            }
+        }
         return response.failedRecordCount();
     }
 }
