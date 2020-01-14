@@ -96,8 +96,7 @@
 
 
 (defn batchload-dir-to-kinesis[dir-path stream-name batch-size]
-  (let [dir-name "../../tmp/drivin-prod"
-        dir (clojure.java.io/file dir-name)
+  (let [dir (clojure.java.io/file dir-path)
         ]
     (doseq [d (sort (.listFiles dir))]
       (if (.isDirectory d)
