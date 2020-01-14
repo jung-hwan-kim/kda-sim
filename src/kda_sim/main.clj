@@ -25,16 +25,15 @@
   (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
                                                                {:k kstate})})
         event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
-    (aws/kinesis-put stream-name [event])
-    ))
+    (aws/kinesis-put stream-name [event])))
 
 (defn ednk-clean-kstate [stream-name]
   (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
                                                                (.clean kstate-obj)
                                                                {:k kstate})})
         event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
-    (aws/kinesis-put stream-name [event])
-    ))
+    (aws/kinesis-put stream-name [event])))
+
 (defn ednk-memory [stream-name]
   (let [edn (encode-base64str {:eventtable "EDNK" :function '(fn [kstate-obj kstate bstate]
                                                                {:freeMem  (.freeMemory (Runtime/getRuntime))
@@ -42,8 +41,7 @@
                                                                 :totalMem  (.totalMemory (Runtime/getRuntime))
                                                                 })})
         event {:EVENTTABLE "EDNK" :VEHICLE_ID "0" :edn edn}]
-    (aws/kinesis-put stream-name [event])
-    ))
+    (aws/kinesis-put stream-name [event])))
 
 (defn send-rule [stream-name rule-name rule-value]
   (let [data {:eventtable "rule" :id rule-name :value rule-value :op "update"
@@ -55,32 +53,26 @@
   (let [event (-> (event/auction-update "0")
                   (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))
         ]
-    (aws/kinesis-put stream-name [event])
-    ))
+    (aws/kinesis-put stream-name [event])))
 
 (defn send-vehicle [stream-name]
   (let [event (-> (event/vehicle-update "0")
-                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))
-        ]
-    (aws/kinesis-put stream-name [event])
-    ))
+                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))]
+    (aws/kinesis-put stream-name [event])))
 
 (defn send-vehicle-additional-info [stream-name]
   (let [event (-> (event/vehicle-addtional-info-update "0")
-                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))
-        ]
-    (aws/kinesis-put stream-name [event])
-    ))
+                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))]
+    (aws/kinesis-put stream-name [event])))
 
 (defn send-picture [stream-name]
   (let [event (-> (event/picture-update "0")
-                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))
-        ]
+                  (assoc :EVENTTIMESTAMP (EventtimestampParser/generateEventtimestampString)))]
     (aws/kinesis-put stream-name [event])))
 
 
 (defn test-kinesis[stream-name]
-  (aws/kinesis-put stream-name [{:vehicleid "123" :test 1}]))
+  (aws/kinesis-put stream-name [{:vehicleid "123" :test 1 :dur 100}]))
 
 (defn send-heartbeat-k[stream-name vehicleId debug action]
   (let [event {:EVENTTABLE "HEARTBEAT_K"
@@ -107,6 +99,13 @@ lein run v $type $stream-name $interval-in-sec
                 (do
                   (println "Running kinesis consumer on: " (first args))
                   (aws/run-kinesis-consumer (first args))))
+    "kinesis-aggr" (if (nil? (first args))
+                (do
+                  (println "Running kinesis consumer on default stream i.e ds-inventory-raw")
+                  (aws/run-kinesis-aggr-consumer "ds-inventory-raw"))
+                (do
+                  (println "Running kinesis consumer on: " (first args))
+                  (aws/run-kinesis-aggr-consumer (first args))))
     "log" (let [first-arg (first args)
                 second-arg (second args)
                 log-group-name (or first-arg "/aws/kinesis-analytics/ds-kda")

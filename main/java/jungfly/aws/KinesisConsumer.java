@@ -56,9 +56,11 @@ public class KinesisConsumer {
         this.kinesisClient = KinesisClientUtil.createKinesisAsyncClient(KinesisAsyncClient.builder().region(this.region));
         this.processorFactory = new ProcessorFactory(listener);
         this.listener = listener;
+        log.info("Consumer:" + streamName);
     }
 
     public void run() {
+        log.info("running:" + streamName);
         DynamoDbAsyncClient dynamoClient = DynamoDbAsyncClient.builder().region(region).build();
         CloudWatchAsyncClient cloudWatchClient = CloudWatchAsyncClient.builder().region(region).build();
         ConfigsBuilder configsBuilder = new ConfigsBuilder(streamName, streamName, kinesisClient, dynamoClient, cloudWatchClient, UUID.randomUUID().toString(), processorFactory);
@@ -137,6 +139,7 @@ public class KinesisConsumer {
                     CharBuffer charBuffer = StandardCharsets.US_ASCII.decode(r.data());
                     listener.listen(shardId, r.partitionKey(), r.sequenceNumber(), charBuffer.toString());
                 });
+                processRecordsInput.checkpointer().checkpoint();
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Caught throwable while processing records. Aborting.");

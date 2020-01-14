@@ -24,6 +24,37 @@
       (println "Count=" @counter))
     ))
 
+(def max-dur (atom 0))
+(def error-counter (atom 0))
+(def total-dur (atom 0))
+
+(defn aggr-kinesis-listener[]
+  (reify jungfly.aws.KinesisListener
+    (listen [this shardId key seq data]
+      ;(log/info "shard:" shardId)
+      ;(log/info "key:" key)
+      ;(log/info "seq:" seq)
+      (log/info "data:" data)
+      (try
+         (let [dur (:dur (json/parse-string data true))]
+           (swap! total-dur #(+ dur %))
+           (if (< @max-dur dur)
+             (reset! max-dur dur))
+           )
+         (println (swap! counter inc) ">" data)
+         (catch Exception e
+           (println "ERROR" (swap! error-counter inc) ">" data))))
+    (resetCount [this]
+      (reset! counter 0)
+      (reset! error-counter 0)
+      (reset! total-dur 0)
+      (println "resetted to zero"))
+    (print [this]
+      (if (= @counter 0)
+        (println "Count=0 Errors=" @error-counter)
+        (println "Max=" @max-dur " Avg=" (float (/ @total-dur @counter)) " Count=" @counter " Errors=" @error-counter))
+        )))
+
 (defn run-kinesis-consumer
   ([stream-name]
    (run-kinesis-consumer stream-name "us-east-1" (default-kinesis-listener)))
@@ -32,6 +63,15 @@
   ([stream-name region kinesis-listener]
    (let [kc (jungfly.aws.KinesisConsumer. stream-name region kinesis-listener)]
     (.run kc))))
+
+(defn run-kinesis-aggr-consumer
+  ([stream-name]
+   (run-kinesis-aggr-consumer stream-name "us-east-1" (aggr-kinesis-listener)))
+  ([stream-name region]
+   (run-kinesis-aggr-consumer stream-name region (aggr-kinesis-listener)))
+  ([stream-name region kinesis-listener]
+   (let [kc (jungfly.aws.KinesisConsumer. stream-name region kinesis-listener)]
+     (.run kc))))
 
 (defn kinesis-put-record
   ([stream-name json-data]
