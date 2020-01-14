@@ -90,7 +90,7 @@
       (if (empty? list)
         total-count
         (let [working-list (take batch-size list)]
-          (aws/kinesis-put stream-name working-list #(:vehicleId %))
+          (println (aws/kinesis-put stream-name (vec working-list) #(:vehicleId %)))
           ;(println (count working-list))
           (recur (drop batch-size list) (+ total-count (count working-list))))))))
 
@@ -102,7 +102,7 @@
            total 0]
       (if (empty? directories)
         (println "Processed: Total" total)
-        (let [t2 (loop [files (.listFiles (first directories))
+        (let [t2 (loop [files (sort (.listFiles (first directories)))
                         t 0]
                    (if (empty? files)
                      t
