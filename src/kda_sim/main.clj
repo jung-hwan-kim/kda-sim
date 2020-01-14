@@ -121,5 +121,10 @@ lein run v $type $stream-name $interval-in-sec
              (awslogs/logs-describe-log-groups "/ds/kda")
              (awslogs/logs-describe-log-streams "/ds/kda")
              (shutdown-agents))
+    "batchload" (let [stream-name (or (first args) "ds-prototype-master")
+                      batch-size (Integer/valueOf (or (second args) "100"))
+                      db {:dbtype "h2" :dbname "prototype01"}
+                      conn (next.jdbc/get-connection db)]
+                  (da/batchload-event-data conn stream-name batch-size))
     (println help-doc))
   (println "*** end of sim ***"))

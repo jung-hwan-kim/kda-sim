@@ -48,6 +48,7 @@
       (reset! counter 0)
       (reset! error-counter 0)
       (reset! total-dur 0)
+      (reset! max-dur 0)
       (println "resetted to zero"))
     (print [this]
       (if (= @counter 0)
