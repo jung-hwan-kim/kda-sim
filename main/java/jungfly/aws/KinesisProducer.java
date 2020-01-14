@@ -49,7 +49,7 @@ public class KinesisProducer {
         PutRecordsResponse response = kinesisClient.putRecords(putRecordsRequest);
 
         while (response.failedRecordCount() > 0) {
-            System.out.println("FAILED: " + response.failedRecordCount());
+            System.out.println("FAILED: " + response.failedRecordCount() + response.records().get(0).errorMessage());
             putRecordsRequest = PutRecordsRequest.builder().records(list).streamName(streamName).build();
             response = kinesisClient.putRecords(putRecordsRequest);
         }
