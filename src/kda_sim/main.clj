@@ -90,8 +90,8 @@
       (if (empty? list)
         "done"
         (do
-          ;(aws/kinesis-put stream-name (take batch-size list) #(:vehicleId %))
-          (println (count (take batch-size list)))
+          (aws/kinesis-put stream-name (take batch-size list) #(:vehicleId %))
+          ;(println (count (take batch-size list)))
           (recur (drop batch-size list)))))))
 
 
