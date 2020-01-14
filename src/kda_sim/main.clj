@@ -86,24 +86,31 @@
 
 (defn readfile-and-kinesis[file-name stream-name batch-size]
   (let [jsons (json/parsed-seq (clojure.java.io/reader file-name) true)]
-    (loop [list jsons]
+    (loop [list jsons total-count 0]
       (if (empty? list)
-        "done"
-        (do
-          (aws/kinesis-put stream-name (take batch-size list) #(:vehicleId %))
-          ;(println (count (take batch-size list)))
-          (recur (drop batch-size list)))))))
+        total-count
+        (let [working-list (take batch-size list)]
+          (aws/kinesis-put stream-name working-list #(:vehicleId %))
+          ;(println (count working-list))
+          (recur (drop batch-size list) (+ total-count (count working-list))))))))
 
 
 (defn batchload-dir-to-kinesis[dir-path stream-name batch-size]
   (let [dir (clojure.java.io/file dir-path)
         ]
-    (doseq [d (sort (.listFiles dir))]
-      (if (.isDirectory d)
-        (doseq [f (sort (.listFiles d))]
-          (println (.getName f))
-          (readfile-and-kinesis (.getPath f) stream-name batch-size)
-          )))))
+    (loop [directories (sort (.listFiles dir))
+           total 0]
+      (if (empty? directories)
+        (println "Processed: Total" total)
+        (let [t2 (loop [files (.listFiles (first directories))
+                        t 0]
+                   (if (empty? files)
+                     t
+                     (let [f (first files)
+                           t0 (readfile-and-kinesis (.getPath f) stream-name batch-size)]
+                       (println (.getName f) t0)
+                       (recur (rest files) (+ t0 t)))))]
+          (recur (rest directories) (+ t2 total)))))))
 
 
 (def help-doc "Options: kinesis, log, v
