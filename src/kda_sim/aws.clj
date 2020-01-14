@@ -14,8 +14,8 @@
       ;(log/info "shard:" shardId)
       ;(log/info "key:" key)
       ;(log/info "seq:" seq)
-      ;(log/info "data:" data)
-      (println (swap! counter inc) ">" data)
+      (log/info "data:" data)
+      (println (swap! counter inc) ">")
       )
     (resetCount [this]
       (reset! counter 0)
@@ -41,8 +41,9 @@
            (if (< @max-dur dur)
              (reset! max-dur dur))
            )
-         (println (swap! counter inc) ">" data)
+         (println (swap! counter inc) ">")
          (catch Exception e
+           (log/error e)
            (println "ERROR" (swap! error-counter inc) ">" data))))
     (resetCount [this]
       (reset! counter 0)
