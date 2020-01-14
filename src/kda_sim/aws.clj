@@ -125,7 +125,7 @@
 (defn kinesis-put
   ([stream-name vector pkey-fn]
   (let [data (vec (transform-kineisis-data vector pkey-fn))]
-    (println data)
+    ;(println data)
     (.putRecords producer stream-name data)))
   ([stream-name vector]
    (kinesis-put stream-name vector #(:vehicleid %))))

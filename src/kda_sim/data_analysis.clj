@@ -123,3 +123,5 @@
   ([conn stream-name vehicleid batch-size]
    (let[fn (fn[r] (aws/kinesis-put stream-name r))]
      (apply-batch-events conn vehicleid fn batch-size))))
+
+

@@ -83,6 +83,30 @@
                }]
     (aws/kinesis-put stream-name [event])))
 
+
+(defn readfile-and-kinesis[file-name stream-name batch-size]
+  (let [jsons (json/parsed-seq (clojure.java.io/reader file-name) true)]
+    (loop [list jsons]
+      (if (empty? list)
+        "done"
+        (do
+          (aws/kinesis-put stream-name (take batch-size list) #(:vehicleId %))
+          ;(println (count (take batch-size list)))
+          (recur (drop batch-size list)))))))
+
+
+(defn batchload-dir-to-kinesis[dir-path stream-name batch-size]
+  (let [dir-name "../../tmp/drivin-prod"
+        dir (clojure.java.io/file dir-name)
+        ]
+    (doseq [d (sort (.listFiles dir))]
+      (if (.isDirectory d)
+        (doseq [f (sort (.listFiles d))]
+          (println (.getName f))
+          (readfile-and-kinesis (.getPath f) stream-name batch-size)
+          )))))
+
+
 (def help-doc "Options: kinesis, log, v
 e.g.
 lein run kinesis $stream-name
@@ -121,10 +145,10 @@ lein run v $type $stream-name $interval-in-sec
              (awslogs/logs-describe-log-groups "/ds/kda")
              (awslogs/logs-describe-log-streams "/ds/kda")
              (shutdown-agents))
-    "batchload" (let [stream-name (or (first args) "ds-prototype-master")
-                      batch-size (Integer/valueOf (or (second args) "100"))
-                      db {:dbtype "h2" :dbname "prototype01"}
-                      conn (next.jdbc/get-connection db)]
-                  (da/batchload-event-data conn stream-name batch-size))
+    "batchload" (let [dir-name (first args)
+                      stream-name (or (second args) "ds-prototype-master")
+                      batch-size (Integer/valueOf (or (nth args 2) "100"))]
+                  (time
+                    (batchload-dir-to-kinesis dir-name  stream-name batch-size)))
     (println help-doc))
   (println "*** end of sim ***"))

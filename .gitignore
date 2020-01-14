@@ -15,3 +15,5 @@ pom.xml.asc
 /logs/
 /inventory.mv.db
 /inventory.trace.db
+/prototype01.mv.db
+/prototype01.trace.db
