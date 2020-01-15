@@ -3,6 +3,7 @@
   (:require [kda-sim.aws :as aws]
             [kda-sim.v :as v]
             [kda-sim.event :as event]
+            [kda-sim.dedup-metric :as dm]
             [kda-sim.awslogs :as awslogs]
             [datascript.core :as d]
             [camel-snake-kebab.core :as csk]

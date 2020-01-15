@@ -15,7 +15,7 @@
       ;(log/info "key:" key)
       ;(log/info "seq:" seq)
       (log/info "data:" data)
-      (println (swap! counter inc) ">")
+      (println (swap! counter inc) ">" data)
       )
     (resetCount [this]
       (reset! counter 0)
@@ -41,7 +41,7 @@
            (if (< @max-dur dur)
              (reset! max-dur dur))
            )
-         (println (swap! counter inc) ">")
+         (println (swap! counter inc) ">" data)
          (catch Exception e
            (log/error e)
            (println "ERROR" (swap! error-counter inc) ">" data))))
