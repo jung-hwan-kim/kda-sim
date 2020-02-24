@@ -14,38 +14,7 @@
 (defn -loadup[conn file]
   (println "loading.." (str file))
   (let [jsons (json/parsed-seq (clojure.java.io/reader file) true)
-        val (map (fn[x] (select-keys x [:vehicleId
-                                        :eventType
-                                        :eventDate
-                                        :country
-                                        :runNumber
-                                        :lotNumber
-                                        :lane
-                                        :iteration
-                                        :currentHighBid
-                                        :buyNowPrice
-                                        :auctionEndDate
-                                        :vehicleGrade
-                                        :drivetrain
-                                        :sellerAnnouncements
-                                        :hasPriorPaintwork
-                                        :titleState
-                                        :fuelType
-                                        :vehicleDetailUrl
-                                        :mileage
-                                        :vehicleType
-                                        :bodyStyleName
-                                        :imageViewerUrl
-                                        :engineName
-                                        :sellerType
-                                        :inspectionDate
-                                        :primaryImageUrl
-                                        :saleEventDate
-                                        :salvage
-                                        :vin
-                                        :finalPrice
-                                        :inspectionComments
-                                        :basePrice
+        val (map (fn[x] (select-keys x [:testId
                                         ])) jsons)
         i-sql (-> (insert-into :event)
                   (values val)
