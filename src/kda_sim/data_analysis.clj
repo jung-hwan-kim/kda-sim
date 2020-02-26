@@ -39,29 +39,13 @@
 (defn execute[conn query]
   (jdbc/execute! conn [query]))
 
-(defn query[conn vehicleid]
-  (jdbc/execute! conn [(str "select VEHICLEID, eventtype, eventdate from event where vehicleId = " vehicleid " order by eventdate")] {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps}))
 
-(defn query-next[conn size]
-  (jdbc/execute! conn [(str "select VEHICLEID, eventdate  from event order by eventdate limit " size)] {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps}))
-
-
-(defn query-c[vehicleid]
-  (map (fn[x] (map val x)) (execute "select eventdate, eventtype, vehiclegrade, iteration, lotnumber, runnumber, lane, auctionenddate, buynowprice, currenthighbid from event where vehicleId = 531659772 order by eventdate"))
-  )
 
 (defn maintanance[conn]
   (jdbc/execute! conn ["create index evendate_index on event (eventdate asc) "]))
 
 ;(da/execute "select count(distinct vehicleid) from event")
 ; => [{:COUNT(DISTINCT VEHICLEID) 167694}]
-
-(defn get-next-events
-  ([conn offset-eventdate size]
-   (jdbc/execute! conn [(str "select * from event where eventdate > '" offset-eventdate "' order by eventdate limit " size)] {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps}))
-  ([conn vehicleid offset-eventdate size]
-   (jdbc/execute! conn [(str "select * from event where vehicleid = " vehicleid " and eventdate > '" offset-eventdate "' order by eventdate limit " size)] {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps}))
-  )
 
 
 
